@@ -43,11 +43,14 @@ namespace Emulator6502
             {
                 cpu.PreRunCycle();
 
-                memory.Enable(cpu.RW);
+                //memory.Enable(cpu.RW);
+                if (cpu.RW) memory.Read();
 
                 Console.WriteLine($"{cycle}\t${addressBus.Address:X4}\t{dataBus.Data:X2}\t{cpu.PC:X4}\t{cpu.IR:X2}\t{cpu.TState}");
 
                 cpu.RunCycle();
+
+                if (!cpu.RW) memory.Write();
 
                 cycle++;
 

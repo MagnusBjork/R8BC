@@ -132,7 +132,7 @@ namespace Emulator6502
                 }
             }
 
-            // TODO: Borde man flytta _pd = _dataBus.Data och motsatt, bort till preRunCycle istället?
+            // TODO: Borde man flytta _pd = _dataBus.Data, bort till preRunCycle istället? OCh hur gör man i så fall åt andra hållet?
 
             if (_tState.Equals(EnumTstate.T0))
             {
@@ -140,13 +140,15 @@ namespace Emulator6502
 
                 if (IR.Equals(0x6D))
                 {
-                    A += _dataBus.Data;     //TODO: Gör en bättre add som påverkar flaggorna.
+                    A += _dataBus.Data;     //  Direkt från minnet till accumulatorn eller via PD? TODO: Gör en bättre add som påverkar flaggorna.
                     Console.WriteLine($"IR: {IR:X2} - T0 Execute - ADH: {_adh:X2} ADL: {_adl:X2} - Accu: {A:X2}");
                     LoadAddress(PC);
                 }
 
                 if (IR.Equals(0x8D))
                 {
+                    //TODO: Måste skriva till minnet i cycle 11.                   
+
                     RW = false;
                     _dataBus.Data = A;
                     Console.WriteLine($"Write to memory - IR: {IR:X2} - T0 Execute - ADH: {_adh:X2} ADL: {_adl:X2} - Accu: {A:X2}");

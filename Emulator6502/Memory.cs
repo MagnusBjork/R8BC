@@ -36,6 +36,12 @@ namespace Emulator6502
                 _memoryArea[_addressBus.Address] = _dataBus.Data;   // rw = 0: Write to memory
         }
 
+        public void Read() => _dataBus.Data = _memoryArea[_addressBus.Address];
+
+        public void Write() => _memoryArea[_addressBus.Address] = _dataBus.Data;
+
+
+
         public void SetByte(ushort pointer, byte data)
         {
             _memoryArea[pointer] = data;
