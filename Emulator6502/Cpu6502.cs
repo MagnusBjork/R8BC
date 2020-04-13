@@ -78,81 +78,82 @@ namespace Emulator6502
 
         public void RunCycle()
         {
-
-            if (RW)
+            if (_tState.Equals(EnumTstate.T1))
             {
-                //-------- Read
+                // T1 Fetch
 
-                if (_tState.Equals(EnumTstate.T1))
+                _instruction = LoadToDecoder(_dataBus.Data);
+                IR = _instruction.Opcode;
+                PC++;
+                LoadAddress(PC);
+            };
+
+            if (_tState.Equals(EnumTstate.T2) || _tState.Equals(EnumTstate.T0T2))
+            {
+                // T2 Execute
+
+                if (IR.Equals(0x18))
                 {
-                    // T1 Fetch
+                    Console.WriteLine($"IR: {IR:X2} - T2 Execute - Flags: C");
+                }
 
-                    _instruction = LoadToDecoder(_dataBus.Data);
-                    IR = _instruction.Opcode;
+                if (IR.Equals(0xA9))
+                {
+                    A = _dataBus.Data;
+                    Console.WriteLine($"IR: {IR:X2} - T2 Execute - Accu: {A:X2} - Flags: N, Z");
                     PC++;
                     LoadAddress(PC);
-                };
-
-                if (_tState.Equals(EnumTstate.T2) || _tState.Equals(EnumTstate.T0T2))
-                {
-                    // T2 Execute
-
-                    if (IR.Equals(0x18))
-                    {
-                        Console.WriteLine($"IR: {IR:X2} - T2 Execute - Flags: C");
-                    }
-
-                    if (IR.Equals(0xA9))
-                    {
-                        A = _dataBus.Data;
-                        Console.WriteLine($"IR: {IR:X2} - T2 Execute - Accu: {A:X2} - Flags: N, Z");
-                        PC++;
-                        LoadAddress(PC);
-                    }
-
-                    if (IR.Equals(0x6D))
-                    {
-                        _pd = _dataBus.Data;
-                        Console.WriteLine($"IR: {IR:X2} - T2 Execute - Low byte: {_pd:X2}");
-                        PC++;
-                        LoadAddress(PC);
-                    }
                 }
 
-                if (_tState.Equals(EnumTstate.T3))
+                if (IR.Equals(0x6D) || IR.Equals(0x8D))
                 {
-                    // T3 Execute
-
-                    if (IR.Equals(0x6D))
-                    {
-                        _alu = _pd;
-                        _pd = _dataBus.Data;
-                        Console.WriteLine($"IR: {IR:X2} - T3 Execute - High byte: {_pd:X2}");
-                        PC++;
-
-                        _adh = _pd;
-                        _adl = _alu;
-                    }
+                    _pd = _dataBus.Data;
+                    Console.WriteLine($"IR: {IR:X2} - T2 Execute - Low byte: {_pd:X2}");
+                    PC++;
+                    LoadAddress(PC);
                 }
 
 
-                if (_tState.Equals(EnumTstate.T0))
-                {
-                    // Execute T0 
+            }
 
-                    if (IR.Equals(0x6D))
-                    {
-                        //_addressBus.Address = (ushort)((_adh << 8) + _adl);
-                        A = _dataBus.Data;
-                        Console.WriteLine($"IR: {IR:X2} - T0 Execute - ADH: {_adh:X2} ADL: {_adl:X2} - Accu: {A:X2}");
-                    }
-                }
+            if (_tState.Equals(EnumTstate.T3))
+            {
+                // T3 Execute
 
-                else
+                if (IR.Equals(0x6D) || IR.Equals(0x8D))
                 {
-                    //-------- Write
+                    _alu = _pd;
+                    _pd = _dataBus.Data;
+                    Console.WriteLine($"IR: {IR:X2} - T3 Execute - High byte: {_pd:X2}");
+                    PC++;
+
+                    _adh = _pd;
+                    _adl = _alu;
                 }
             }
+
+            // TODO: Borde man flytta _pd = _dataBus.Data och motsatt, bort till preRunCycle istället?
+
+            if (_tState.Equals(EnumTstate.T0))
+            {
+                // Execute T0 
+
+                if (IR.Equals(0x6D))
+                {
+                    A += _dataBus.Data;     //TODO: Gör en bättre add som påverkar flaggorna.
+                    Console.WriteLine($"IR: {IR:X2} - T0 Execute - ADH: {_adh:X2} ADL: {_adl:X2} - Accu: {A:X2}");
+                    LoadAddress(PC);
+                }
+
+                if (IR.Equals(0x8D))
+                {
+                    RW = false;
+                    _dataBus.Data = A;
+                    Console.WriteLine($"Write to memory - IR: {IR:X2} - T0 Execute - ADH: {_adh:X2} ADL: {_adl:X2} - Accu: {A:X2}");
+                }
+            }
+
+
 
 
             _tState = GetNextTstate(_tState, _instruction);

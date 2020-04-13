@@ -14,17 +14,18 @@ namespace Emulator6502
 
 
             // Write a program to memory
-            memory.SetByte(0x0500, 0x18);
-            memory.SetByte(0x0501, 0xA9);
+            memory.SetByte(0x0500, 0x18);   // CLC
+            memory.SetByte(0x0501, 0xA9);   // LDA #
             memory.SetByte(0x0502, 0x23);
-            memory.SetByte(0x0503, 0x6D);
+            memory.SetByte(0x0503, 0x6D);   // ADC Abs
             memory.SetByte(0x0504, 0x43);
             memory.SetByte(0x0505, 0x20);
-            memory.SetByte(0x0506, 0x8D);
+            memory.SetByte(0x0506, 0x8D);   // STA Abs
             memory.SetByte(0x0507, 0x43);
             memory.SetByte(0x0508, 0x20);
+            memory.SetByte(0x0509, 0x00);   // BRK
 
-            memory.SetByte(0x2043, 0x72);
+            memory.SetByte(0x2043, 0x04);
 
             // http://visual6502.org/JSSim/expert.html?graphics=f&steps=4&loglevel=4&r=500&a=500&d=18A9236D43208D4320
 
@@ -52,12 +53,13 @@ namespace Emulator6502
 
                 //-------------- Clock cycle completed
 
-
+                Console.WriteLine("Data in $2043 " + memory.GetByte(0x2043));
 
                 var key = Console.ReadLine();
                 if (key == "q") quit = true;
 
             }
+
 
             Console.WriteLine("End");
             Console.ReadLine();

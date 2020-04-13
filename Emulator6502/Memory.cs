@@ -41,6 +41,12 @@ namespace Emulator6502
             _memoryArea[pointer] = data;
         }
 
+
+        public byte GetByte(ushort pointer)
+        {
+            return _memoryArea[pointer];
+        }
+
         public void BulkUploadMemoryImage(Dictionary<UInt16, byte> data)
         {
             foreach (var dataRow in data)
