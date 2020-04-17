@@ -6,7 +6,7 @@ namespace Emulator6502
 {
     public interface IMemory
     {
-        void Enable(bool RW);
+        //  void Enable(bool RW);
         void BulkUploadMemoryImage(Dictionary<UInt16, byte> data);
         void SetByte(ushort pointer, byte data);
     }
@@ -28,13 +28,13 @@ namespace Emulator6502
         }
 
 
-        public void Enable(bool rw)
-        {
-            if (rw)
-                _dataBus.Data = _memoryArea[_addressBus.Address];   // rw = 1: Read from memory
-            else
-                _memoryArea[_addressBus.Address] = _dataBus.Data;   // rw = 0: Write to memory
-        }
+        // public void Enable(bool rw)
+        // {
+        //     if (rw)
+        //         _dataBus.Data = _memoryArea[_addressBus.Address];   // rw = 1: Read from memory
+        //     else
+        //         _memoryArea[_addressBus.Address] = _dataBus.Data;   // rw = 0: Write to memory
+        // }
 
         public void Read() => _dataBus.Data = _memoryArea[_addressBus.Address];
 

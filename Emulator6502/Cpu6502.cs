@@ -161,8 +161,6 @@ namespace Emulator6502
 
                 if (IR.Equals(0x8D))
                 {
-                    //TODO: Måste skriva till minnet i cycle 11.                   
-
                     RW = false;
                     _dataBus.Data = A;
                     Console.WriteLine($"Write to memory - IR: {IR:X2} - T0 Execute - ADH: {_adh:X2} ADL: {_adl:X2} - Accu: {A:X2}");
