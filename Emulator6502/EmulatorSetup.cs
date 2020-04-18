@@ -12,6 +12,8 @@ namespace Emulator6502
         private Memory _memory;
         private Cpu6502 _cpu;
 
+        public IList<string> CpuDump { get; private set; } = new List<string>();
+        public IList<ushort> MemoryDump { get; private set; } = new List<ushort>();
         public ushort ProgramStartAddress { get; private set; }
 
         public EmulatorSetup()
@@ -21,7 +23,6 @@ namespace Emulator6502
             _memory = new Memory(_addressBus, _dataBus);
             _cpu = new Cpu6502(_addressBus, _dataBus);
         }
-
 
         public bool SetProgramStartAddress(string address)
         {
@@ -52,46 +53,35 @@ namespace Emulator6502
                 _memory.SetByte(pointer, prgByte);
                 pointer++;
             }
-            //18,A9,23,6D,43,20,8D,43,20,00
-
-            // Write a program to memory
-            // _memory.SetByte(0x0500, 0x18);   // CLC
-            // _memory.SetByte(0x0501, 0xA9);   // LDA #
-            // _memory.SetByte(0x0502, 0x23);
-            // _memory.SetByte(0x0503, 0x6D);   // ADC Abs
-            // _memory.SetByte(0x0504, 0x43);
-            // _memory.SetByte(0x0505, 0x20);
-            // _memory.SetByte(0x0506, 0x8D);   // STA Abs
-            // _memory.SetByte(0x0507, 0x43);
-            // _memory.SetByte(0x0508, 0x20);
-            // _memory.SetByte(0x0509, 0x00);   // BRK
-
-            _memory.SetByte(0x2043, 0x04);
 
             return true;
         }
 
+        public void SetMemoryByte(ushort address, byte data, bool addToMemoryDump = true)
+        {
+            if (addToMemoryDump)
+                this.MemoryDump.Add(address);
+
+            _memory.SetByte(address, data);
+        }
+
+        public byte GetMemoryByte(ushort address) => _memory.GetByte(address);
+
+
 
         public void RunDebugCycle(int cycle)
         {
-
             _cpu.PreRunCycle();
 
-            if (_cpu.RW) _memory.Read();
+            if (_cpu.RW)
+                _memory.Read();
 
-            Console.WriteLine("Cycle\tAddress\tData\tPC\tIR\tTstate");
-            Console.WriteLine("-------------------------------------------------");
-            Console.WriteLine($"{cycle}\t${_addressBus.Address:X4}\t{_dataBus.Data:X2}\t{_cpu.PC:X4}\t{_cpu.IR:X2}\t{_cpu.TState}");
+            this.CpuDump.Add($"{cycle}\t${_addressBus.Address:X4}\t{_dataBus.Data:X2}\t{_cpu.PC:X4}\t{_cpu.IR:X2}\t{_cpu.Instruction.Operation}\t{_cpu.TState}\t{_cpu.A}\t{_cpu.X}\t{_cpu.Y}\t{_cpu.P.ToString()}");
 
             _cpu.RunCycle();
 
-            if (!_cpu.RW) _memory.Write();
-
-
-
-            //-------------- Clock cycle completed
-
-            Console.WriteLine("Data in $2043 " + _memory.GetByte(0x2043));
+            if (!_cpu.RW)
+                _memory.Write();
 
         }
 

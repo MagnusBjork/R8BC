@@ -6,7 +6,19 @@ namespace Emulator6502
     {
         static void Main(string[] args)
         {
-            var emulatorSetup = new EmulatorSetup();
+            Console.ForegroundColor = ConsoleColor.DarkGreen;
+            Console.WriteLine("6502 Emulator");
+            Console.WriteLine("-------------");
+
+            var emulator = new EmulatorSetup();
+
+
+            // ---- Preset my test program
+            emulator.SetProgramStartAddress("0x500");
+            string testPrg = "18,A9,23,6D,43,20,8D,43,20,00";
+            emulator.LoadProgramToMemory(testPrg);
+            emulator.SetMemoryByte(0x2043, 0x04);
+
 
             bool quit = false;
             int cycle = 0;
@@ -29,10 +41,9 @@ namespace Emulator6502
 
                     case "d":
                     case "debug":
-
                         Console.Write("Start address (hex): $");
                         cliArgument = Console.ReadLine();
-                        if (!emulatorSetup.SetProgramStartAddress(cliArgument))
+                        if (!emulator.SetProgramStartAddress(cliArgument))
                         {
                             Console.WriteLine("Error! Address in wrong format.");
                             break;
@@ -44,10 +55,9 @@ namespace Emulator6502
 
                     case "l":
                     case "load":
-
                         Console.Write("Start address (hex): $");
                         cliArgument = Console.ReadLine();
-                        if (!emulatorSetup.SetProgramStartAddress(cliArgument))
+                        if (!emulator.SetProgramStartAddress(cliArgument))
                         {
                             Console.WriteLine("Error! Address in wrong format.");
                             break;
@@ -55,7 +65,7 @@ namespace Emulator6502
 
                         Console.Write("Program byte data: ");
                         cliArgument = Console.ReadLine();
-                        if (!emulatorSetup.LoadProgramToMemory(cliArgument))
+                        if (!emulator.LoadProgramToMemory(cliArgument))
                         {
                             Console.WriteLine("Error! Program data could not be loaded.");
                             break;
@@ -71,22 +81,50 @@ namespace Emulator6502
                         string viewEndAdr = Console.ReadLine();
                         break;
 
+                    case "j":
+                    case "help":
+                        Console.Clear();
+                        Console.Write("TODO: HELP");
+                        break;
+
                     default:
                         if (debug)
                         {
-                            Console.WriteLine("Press Enter for next cycle.");
-                            emulatorSetup.RunDebugCycle(cycle);
+                            emulator.RunDebugCycle(cycle);
+                            UpdateDebugView(emulator);
                             cycle++;
+                        }
+                        else
+                        {
+                            Console.Clear();
+                            Console.Write("Enter a command or enter 'help'.");
                         }
                         break;
                 }
             }
-
         }
 
+        private static void UpdateDebugView(EmulatorSetup emulator)
+        {
+            Console.Clear();
+
+            Console.WriteLine("Cycle\tAddress\tData\tPC\tIR\tInstr\tTState\tA\tX\tY\tP");
+            Console.WriteLine("----------------------------------------------------------------------------------------");
+            foreach (var cpuCycleDump in emulator.CpuDump)
+            {
+                Console.WriteLine(cpuCycleDump);
+            }
 
 
+            Console.WriteLine("");
+            Console.WriteLine("Memory");
+            Console.WriteLine("------");
+            foreach (var address in emulator.MemoryDump)
+            {
+                byte data = emulator.GetMemoryByte(address);
+                Console.WriteLine($"${address:X4}: {data:X2}");
+            }
 
-
+        }
     }
 }
