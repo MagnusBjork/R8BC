@@ -69,19 +69,21 @@ namespace Emulator6502
 
 
 
-        public void RunDebugCycle(int cycle)
+        public string RunDebugCycle(int cycle)
         {
             _cpu.PreRunCycle();
 
             if (_cpu.RW)
                 _memory.Read();
 
-            this.CpuDump.Add($"{cycle}\t${_addressBus.Address:X4}\t{_dataBus.Data:X2}\t{_cpu.PC:X4}\t{_cpu.IR:X2}\t{_cpu.Instruction.Operation}\t{_cpu.TState}\t{_cpu.A}\t{_cpu.X}\t{_cpu.Y}\t{_cpu.P.ToString()}");
+            this.CpuDump.Add($"{cycle}\t${_addressBus.Address:X4}\t{_dataBus.Data:X2}\t{_cpu.PC:X4}\t{_cpu.IR:X2}\t{_cpu.Instruction.Operation}\t{_cpu.TState}\t{_cpu.A:X2}\t{_cpu.X:X2}\t{_cpu.Y:X2}\t{_cpu.P.ToString()}");
 
-            _cpu.RunCycle();
+            string debugInfo = _cpu.RunCycle();
 
             if (!_cpu.RW)
                 _memory.Write();
+
+            return debugInfo;
 
         }
 

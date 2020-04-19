@@ -51,11 +51,13 @@ namespace Emulator6502
         public void PreRunCycle()
         {
             _addressBus.Address = (ushort)((_adh << 8) + _adl);
+            RW = true;      // Tillsvidare, utgår från att vi bara har en write cycle.
         }
 
-
-        public void RunCycle()
+        public string RunCycle()
         {
+            string debugInfo = String.Empty;
+
             if (_tState.Equals(EnumTstate.T1))
             {
                 // T1 Fetch
@@ -64,53 +66,65 @@ namespace Emulator6502
                 IR = Instruction.Opcode;
                 PC++;
                 LoadAddress(PC);
+                debugInfo = $"T1 Fetch";
             };
 
             if (_tState.Equals(EnumTstate.T2) || _tState.Equals(EnumTstate.T0T2))
             {
                 // Instruktioner med T0+T2 verkar alla vara de som är 'Implied' eller 'Immediate'.
 
-
-
                 // T2 Execute
 
                 if (IR.Equals(0x18))
                 {
-                    Console.WriteLine($"IR: {IR:X2} - T2 Execute - Flags: C");
+                    debugInfo = $"IR: {IR:X2} - T2 Execute - Flags: C";
                 }
 
                 if (IR.Equals(0xA9))
                 {
                     A = _dataBus.Data;
-                    Console.WriteLine($"IR: {IR:X2} - T2 Execute - Accu: {A:X2} - Flags: N, Z");
                     PC++;
                     LoadAddress(PC);
+                    debugInfo = $"IR: {IR:X2} - T2 Execute - Accu: {A:X2} - Flags: N, Z";
                 }
 
                 if (IR.Equals(0x6D) || IR.Equals(0x8D))
                 {
                     _pd = _dataBus.Data;
-                    Console.WriteLine($"IR: {IR:X2} - T2 Execute - Low byte: {_pd:X2}");
                     PC++;
                     LoadAddress(PC);
+                    debugInfo = $"IR: {IR:X2} - T2 Execute - Low byte: {_pd:X2}";
                 }
 
 
+                // Zero page - samma för alla?
+                if (IR.Equals(0xA5))
+                {
+                    _pd = _dataBus.Data;
+                    PC++;
+
+                    _adh = 0x00;
+                    _adl = _pd;
+
+                    debugInfo = $"IR: {IR:X2} - T2 Execute - Low byte: {_pd:X2}";
+                }
             }
 
             if (_tState.Equals(EnumTstate.T3))
             {
                 // T3 Execute
 
+                // Absolute addressing - samma för alla?
                 if (IR.Equals(0x6D) || IR.Equals(0x8D))
                 {
                     _alu = _pd;
                     _pd = _dataBus.Data;
-                    Console.WriteLine($"IR: {IR:X2} - T3 Execute - High byte: {_pd:X2}");
                     PC++;
 
                     _adh = _pd;
                     _adl = _alu;
+
+                    debugInfo = $"IR: {IR:X2} - T3 Execute - High byte: {_adh:X2}";
                 }
             }
 
@@ -123,22 +137,30 @@ namespace Emulator6502
                 if (IR.Equals(0x6D))
                 {
                     A += _dataBus.Data;     //  Direkt från minnet till accumulatorn eller via PD? TODO: Gör en bättre add som påverkar flaggorna.
-                    Console.WriteLine($"IR: {IR:X2} - T0 Execute - ADH: {_adh:X2} ADL: {_adl:X2} - Accu: {A:X2}");
                     LoadAddress(PC);
+                    debugInfo = $"IR: {IR:X2} - T0 Execute - ADH: {_adh:X2} ADL: {_adl:X2} - Accu: {A:X2}";
                 }
 
                 if (IR.Equals(0x8D))
                 {
                     RW = false;
                     _dataBus.Data = A;
-                    Console.WriteLine($"Write to memory - IR: {IR:X2} - T0 Execute - ADH: {_adh:X2} ADL: {_adl:X2} - Accu: {A:X2}");
+                    LoadAddress(PC);
+                    debugInfo = $"Write to memory - IR: {IR:X2} - T0 Execute - ADH: {_adh:X2} ADL: {_adl:X2} - Accu: {A:X2}";
                 }
+
+                if (IR.Equals(0xA5))
+                {
+                    A = _dataBus.Data;
+                    LoadAddress(PC);
+                    debugInfo = $"IR: {IR:X2} - T0 Execute - Accu: {A:X2} - Flags: N, Z";
+                }
+
             }
 
-
-
-
             _tState = GetNextTstate(_tState, Instruction);
+
+            return debugInfo;
         }
 
         private void LoadAddress(ushort address)
@@ -146,16 +168,6 @@ namespace Emulator6502
             _adl = (byte)(address);
             _adh = (byte)(address >> 8);
         }
-
-
-
-
-        // private Instruction LoadToDecoder(byte opcode)
-        // {
-
-
-        //     return instructions.Where(i => i.Opcode.Equals(opcode)).SingleOrDefault() ?? new Instruction();
-        // }
 
         public static EnumTstate GetNextTstate(EnumTstate currentTstate, Instruction instruction)
         {
@@ -189,13 +201,9 @@ namespace Emulator6502
                     else
                         return EnumTstate.T4;
 
-
                 default:
                     throw new NotImplementedException();
             }
-
         }
-
     }
-
 }
