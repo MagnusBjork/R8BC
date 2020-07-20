@@ -193,7 +193,10 @@ namespace Emulator6502
 
         public Instruction GetInstruction(byte opcode)
         {
-            return _instructions.Where(i => i.Opcode.Equals(opcode)).SingleOrDefault();
+            var instr = _instructions.Where(i => i.Opcode.Equals(opcode)).SingleOrDefault();
+
+            return instr;
         }
+
     }
 }

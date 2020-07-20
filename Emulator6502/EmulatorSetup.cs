@@ -76,7 +76,7 @@ namespace Emulator6502
             if (_cpu.RW)
                 _memory.Read();
 
-            this.CpuDump.Add($"{cycle}\t${_addressBus.Address:X4}\t{_dataBus.Data:X2}\t{_cpu.PC:X4}\t{_cpu.IR:X2}\t{_cpu.Instruction.Operation}\t{_cpu.TState}\t{_cpu.A:X2}\t{_cpu.X:X2}\t{_cpu.Y:X2}\t{_cpu.P.ToString()}");
+            this.CpuDump.Add($"{cycle}\t${_addressBus.Address:X4}\t{_dataBus.Data:X2}\t{_cpu.Fetch?.Operation}\t{_cpu.PC:X4}\t{_cpu.IR:X2}\t{_cpu.Execute.Operation}\t{_cpu.TState}\t{_cpu.A:X2}\t{_cpu.X:X2}\t{_cpu.Y:X2}\t{_cpu.P.ToString()}");
 
             string debugInfo = _cpu.RunCycle();
 

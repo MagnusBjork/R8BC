@@ -18,18 +18,19 @@ namespace Emulator6502
         public ushort PC { get; private set; }
         public byte IR { get; private set; }
         public bool RW { get; private set; }
-        public EnumTstate TState => _tState;
+        public EnumTstate TState { get; private set; }
+        public Instruction Fetch => TState.Equals(EnumTstate.T1) ? _instructionSet.GetInstruction(_dataBus.Data) : null;
+        public Instruction Execute => _instructionSet.GetInstruction(IR);
+
         public byte X { get; private set; }
         public byte Y { get; private set; }
         public byte A { get; private set; }
         public StatusRegister P { get; private set; } = new StatusRegister();
-        public Instruction Instruction { get; private set; } = new Instruction();
-
 
         private readonly IAddressBus _addressBus;
         private readonly IDataBus _dataBus;
         private readonly InstructionSet _instructionSet;
-        private EnumTstate _tState;
+
         private byte _adl;
         private byte _adh;
         private byte _pd;
@@ -43,9 +44,11 @@ namespace Emulator6502
 
             // Set a temp init state for CPU to start executing.
             PC = 0x0500;
+            IR = 0x00;
+
             LoadAddress(PC);
             RW = true;  // Read
-            _tState = EnumTstate.T1;
+            TState = EnumTstate.T1;
         }
 
         public void PreRunCycle()
@@ -58,18 +61,18 @@ namespace Emulator6502
         {
             string debugInfo = String.Empty;
 
-            if (_tState.Equals(EnumTstate.T1))
+            if (TState.Equals(EnumTstate.T1))
             {
                 // T1 Fetch
 
-                Instruction = _instructionSet.GetInstruction(_dataBus.Data);
-                IR = Instruction.Opcode;
+                // Instruction = _instructionSet.GetInstruction(_dataBus.Data);
+                IR = _dataBus.Data;
                 PC++;
                 LoadAddress(PC);
-                debugInfo = $"T1 Fetch";
+                debugInfo = $"T1 Fetch ";
             };
 
-            if (_tState.Equals(EnumTstate.T2) || _tState.Equals(EnumTstate.T0T2))
+            if (TState.Equals(EnumTstate.T2) || TState.Equals(EnumTstate.T0T2))
             {
                 // Instruktioner med T0+T2 verkar alla vara de som är 'Implied' eller 'Immediate'.
 
@@ -110,7 +113,7 @@ namespace Emulator6502
                 }
             }
 
-            if (_tState.Equals(EnumTstate.T3))
+            if (TState.Equals(EnumTstate.T3))
             {
                 // T3 Execute
 
@@ -130,7 +133,7 @@ namespace Emulator6502
 
             // TODO: Borde man flytta _pd = _dataBus.Data, bort till preRunCycle istället? OCh hur gör man i så fall åt andra hållet?
 
-            if (_tState.Equals(EnumTstate.T0))
+            if (TState.Equals(EnumTstate.T0))
             {
                 // Execute T0 
 
@@ -155,10 +158,9 @@ namespace Emulator6502
                     LoadAddress(PC);
                     debugInfo = $"IR: {IR:X2} - T0 Execute - Accu: {A:X2} - Flags: N, Z";
                 }
-
             }
 
-            _tState = GetNextTstate(_tState, Instruction);
+            TState = GetNextTstate(TState, IR);
 
             return debugInfo;
         }
@@ -169,11 +171,12 @@ namespace Emulator6502
             _adh = (byte)(address >> 8);
         }
 
-        public static EnumTstate GetNextTstate(EnumTstate currentTstate, Instruction instruction)
+        public EnumTstate GetNextTstate(EnumTstate currentTstate, byte opcode)
         {
+            var instruction = _instructionSet.GetInstruction(opcode);
+
             if (instruction is null)
                 return EnumTstate.T1;
-
 
             switch (currentTstate)
             {

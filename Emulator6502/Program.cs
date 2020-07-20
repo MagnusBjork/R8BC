@@ -95,7 +95,7 @@ namespace Emulator6502
                         {
                             string debugInfo = emulator.RunDebugCycle(cycle);
                             Console.Clear();
-                            UpdateDebugView(emulator);
+                            Watch(emulator);
                             Console.WriteLine(debugInfo);
                             cycle++;
                         }
@@ -109,10 +109,10 @@ namespace Emulator6502
             }
         }
 
-        private static void UpdateDebugView(EmulatorSetup emulator)
+        private static void Watch(EmulatorSetup emulator)
         {
-            Console.WriteLine("Cycle\tAddress\tData\tPC\tIR\tInstr\tTState\tA\tX\tY\tP(SR)");
-            Console.WriteLine("----------------------------------------------------------------------------------------");
+            Console.WriteLine("Cycle\tAddress\tData\tFetch\tPC\tIR\tExec\tTState\tA\tX\tY\tP(SR)");
+            Console.WriteLine("--------------------------------------------------------------------------------------------------");
             foreach (var cpuCycleDump in emulator.CpuDump)
             {
                 Console.WriteLine(cpuCycleDump);
