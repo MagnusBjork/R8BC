@@ -17,7 +17,8 @@ namespace Emulator6502
 
             // ---- Preset my test program
             emulator.SetProgramStartAddress("0x500");
-            string testPrg = "18,A5,10,6D,43,20,8D,43,20,18,A9,24";
+            //string testPrg = "18,A5,10,6D,43,20,8D,43,20,18,A9,24";
+            string testPrg = "a9 a0 0a 18";
             emulator.LoadProgramToMemory(testPrg);
             emulator.SetMemoryByte(0x2043, 0x04);
             emulator.SetMemoryByte(0x0010, 0xe8);
@@ -111,7 +112,7 @@ namespace Emulator6502
 
         private static void Watch(EmulatorSetup emulator)
         {
-            Console.WriteLine("Cycle\tAddress\tData\tFetch\tPC\tIR\tExec\tTState\tA\tX\tY\tP(SR)");
+            Console.WriteLine("Cycle\tAddress\tData\tFetch\tPC\tIR\tExec\tTState\tA\tX\tY\tNV--DIZC");
             Console.WriteLine("--------------------------------------------------------------------------------------------------");
             foreach (var cpuCycleDump in emulator.CpuDump)
             {

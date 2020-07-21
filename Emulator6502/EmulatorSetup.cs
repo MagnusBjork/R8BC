@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace Emulator6502
 {
@@ -36,15 +37,17 @@ namespace Emulator6502
 
         public bool LoadProgramToMemory(string byteData)
         {
+            var rgx = new Regex("[^A-Z0-9]");
+            byteData = rgx.Replace(byteData.ToUpper(), "");
+            if (byteData.Length % 2 != 0)
+                throw new ArgumentException("Err. Program is not in correct format.");
+
             var programBytes = new List<byte>();
 
-            try
+            for (int i = 0; i < byteData.Length; i += 2)
             {
-                programBytes = byteData.Split(',').Select(s => Byte.Parse(s, NumberStyles.HexNumber)).ToList();
-            }
-            catch
-            {
-                return false;
+                string byteString = byteData.Substring(i, 2);
+                programBytes.Add(Byte.Parse(byteString, NumberStyles.HexNumber));
             }
 
             ushort pointer = this.ProgramStartAddress;
@@ -76,7 +79,7 @@ namespace Emulator6502
             if (_cpu.RW)
                 _memory.Read();
 
-            this.CpuDump.Add($"{cycle}\t${_addressBus.Address:X4}\t{_dataBus.Data:X2}\t{_cpu.Fetch?.Operation}\t{_cpu.PC:X4}\t{_cpu.IR:X2}\t{_cpu.Execute.Operation}\t{_cpu.TState}\t{_cpu.A:X2}\t{_cpu.X:X2}\t{_cpu.Y:X2}\t{_cpu.P.ToString()}");
+            this.CpuDump.Add($"{cycle}\t${_addressBus.Address:X4}\t{_dataBus.Data:X2}\t{_cpu.Fetch?.Operation}\t{_cpu.PC:X4}\t{_cpu.IR:X2}\t{_cpu.Execute.Operation}\t{_cpu.TState}\t{_cpu.Accu:X2}\t{_cpu.X:X2}\t{_cpu.Y:X2}\t{_cpu.StatusReg.ToString()}");
 
             string debugInfo = _cpu.RunCycle();
 

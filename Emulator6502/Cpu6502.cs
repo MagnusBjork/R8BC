@@ -24,8 +24,8 @@ namespace Emulator6502
 
         public byte X { get; private set; }
         public byte Y { get; private set; }
-        public byte A { get; private set; }
-        public StatusRegister P { get; private set; } = new StatusRegister();
+        public byte Accu { get; private set; }
+        public StatusRegister StatusReg { get; private set; } = new StatusRegister();
 
         private readonly IAddressBus _addressBus;
         private readonly IDataBus _dataBus;
@@ -78,18 +78,28 @@ namespace Emulator6502
 
                 // T2 Execute
 
-                if (IR.Equals(0x18))
+                if (IR.Equals(0x18)) // Klar! (cycles:2)
                 {
-                    debugInfo = $"IR: {IR:X2} - T2 Execute - Flags: C";
+                    StatusReg.C = false;
+                    debugInfo = $"IR: {IR:X2} - T2 Execute - Flags: C={StatusReg.C}";
                 }
 
-                if (IR.Equals(0xA9))
+                if (IR.Equals(0xA9))  // Klar!
                 {
-                    A = _dataBus.Data;
+                    Accu = _dataBus.Data;
+                    SetStatus_NZ(Accu);
                     PC++;
                     LoadAddress(PC);
-                    debugInfo = $"IR: {IR:X2} - T2 Execute - Accu: {A:X2} - Flags: N, Z";
+                    debugInfo = $"IR: {IR:X2} - T2 Execute - Accu: {Accu:X2} - Flags: N={StatusReg.N}, Z={StatusReg.Z}";
                 }
+
+                if (IR.Equals(0x0A))    // Klar! (cycles:2)
+                {
+                    StatusReg.C = (Accu >= 0x80) ? true : false;
+                    Accu = (byte)(Accu << 0x01);
+                    debugInfo = $"IR: {IR:X2} - T2 Execute - Accu: {Accu:X2} - Flags: C={StatusReg.C}";
+                }
+
 
                 if (IR.Equals(0x6D) || IR.Equals(0x8D))
                 {
@@ -139,24 +149,24 @@ namespace Emulator6502
 
                 if (IR.Equals(0x6D))
                 {
-                    A += _dataBus.Data;     //  Direkt från minnet till accumulatorn eller via PD? TODO: Gör en bättre add som påverkar flaggorna.
+                    Accu += _dataBus.Data;     //  Direkt från minnet till accumulatorn eller via PD? TODO: Gör en bättre add som påverkar flaggorna.
                     LoadAddress(PC);
-                    debugInfo = $"IR: {IR:X2} - T0 Execute - ADH: {_adh:X2} ADL: {_adl:X2} - Accu: {A:X2}";
+                    debugInfo = $"IR: {IR:X2} - T0 Execute - ADH: {_adh:X2} ADL: {_adl:X2} - Accu: {Accu:X2}";
                 }
 
                 if (IR.Equals(0x8D))
                 {
                     RW = false;
-                    _dataBus.Data = A;
+                    _dataBus.Data = Accu;
                     LoadAddress(PC);
-                    debugInfo = $"Write to memory - IR: {IR:X2} - T0 Execute - ADH: {_adh:X2} ADL: {_adl:X2} - Accu: {A:X2}";
+                    debugInfo = $"Write to memory - IR: {IR:X2} - T0 Execute - ADH: {_adh:X2} ADL: {_adl:X2} - Accu: {Accu:X2}";
                 }
 
                 if (IR.Equals(0xA5))
                 {
-                    A = _dataBus.Data;
+                    Accu = _dataBus.Data;
                     LoadAddress(PC);
-                    debugInfo = $"IR: {IR:X2} - T0 Execute - Accu: {A:X2} - Flags: N, Z";
+                    debugInfo = $"IR: {IR:X2} - T0 Execute - Accu: {Accu:X2} - Flags: N, Z";
                 }
             }
 
@@ -171,6 +181,15 @@ namespace Emulator6502
             _adh = (byte)(address >> 8);
         }
 
+
+        private void SetStatus_NZ(byte data)
+        {
+            StatusReg.N = (data >= 0x80) ? true : false;
+            StatusReg.Z = (data == 0x00) ? true : false;
+        }
+
+
+
         public EnumTstate GetNextTstate(EnumTstate currentTstate, byte opcode)
         {
             var instruction = _instructionSet.GetInstruction(opcode);
@@ -182,7 +201,8 @@ namespace Emulator6502
             {
                 case EnumTstate.T1:
                     return instruction.AddressingMode == EnumAddressingMode.Immediate ||
-                        instruction.AddressingMode == EnumAddressingMode.Implied ? EnumTstate.T0T2 : EnumTstate.T2;
+                        instruction.AddressingMode == EnumAddressingMode.Implied ||
+                        instruction.AddressingMode == EnumAddressingMode.Accumulator ? EnumTstate.T0T2 : EnumTstate.T2;
 
                 case EnumTstate.T0:
                 case EnumTstate.T0T2:
