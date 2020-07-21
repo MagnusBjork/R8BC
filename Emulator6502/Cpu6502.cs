@@ -63,6 +63,30 @@ namespace Emulator6502
 
             if (TState.Equals(EnumTstate.T1))
             {
+
+
+
+
+
+                if (IR.Equals(0x29))
+                {
+                    Accu = _alu;        // !!!!!!!!!!
+                    debugInfo = $"IR: {IR:X2} - T1 Execute - Accu: {Accu:X2} - Flags: N={StatusReg.N}, Z={StatusReg.Z}";
+                }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
                 // T1 Fetch
 
                 // Instruction = _instructionSet.GetInstruction(_dataBus.Data);
@@ -70,15 +94,21 @@ namespace Emulator6502
                 PC++;
                 LoadAddress(PC);
                 debugInfo = $"T1 Fetch ";
+
+
+
+
+
+
             };
+
 
             if (TState.Equals(EnumTstate.T2) || TState.Equals(EnumTstate.T0T2))
             {
-                // Instruktioner med T0+T2 verkar alla vara de som är 'Implied' eller 'Immediate'.
 
                 // T2 Execute
 
-                if (IR.Equals(0x18)) // Klar! (cycles:2)
+                if (IR.Equals(0x18)) // Klar! (1 byte)
                 {
                     StatusReg.C = false;
                     debugInfo = $"IR: {IR:X2} - T2 Execute - Flags: C={StatusReg.C}";
@@ -86,14 +116,31 @@ namespace Emulator6502
 
                 if (IR.Equals(0xA9))  // Klar!
                 {
-                    Accu = _dataBus.Data;
+                    Accu = _dataBus.Data;       // TODO: INTE KORREKT att göra så här direkt.
                     SetStatus_NZ(Accu);
                     PC++;
                     LoadAddress(PC);
-                    debugInfo = $"IR: {IR:X2} - T2 Execute - Accu: {Accu:X2} - Flags: N={StatusReg.N}, Z={StatusReg.Z}";
+                    // debugInfo = $"IR: {IR:X2} - T2 Execute - Accu: {Accu:X2} - Flags: N={StatusReg.N}, Z={StatusReg.Z}";
                 }
 
-                if (IR.Equals(0x0A))    // Klar! (cycles:2)
+
+                if (IR.Equals(0x29))
+                {
+                    _pd = _dataBus.Data;
+
+                    _alu = (byte)(Accu & _pd);
+                    SetStatus_NZ(_alu);
+
+                    // SetStatus_NZ(Accu);
+                    PC++;
+                    LoadAddress(PC);
+                    //   debugInfo = $"IR: {IR:X2} - T2 Execute - Accu: {Accu:X2} - Flags: N={StatusReg.N}, Z={StatusReg.Z}";
+                }
+
+
+
+
+                if (IR.Equals(0x0A))    // Klar! (1 byte)
                 {
                     StatusReg.C = (Accu >= 0x80) ? true : false;
                     Accu = (byte)(Accu << 0x01);

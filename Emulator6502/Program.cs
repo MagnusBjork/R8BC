@@ -17,8 +17,8 @@ namespace Emulator6502
 
             // ---- Preset my test program
             emulator.SetProgramStartAddress("0x500");
-            //string testPrg = "18,A5,10,6D,43,20,8D,43,20,18,A9,24";
-            string testPrg = "a9 a0 0a 18";
+            //  string testPrg = "18,A5,10,6D,43,20,8D,43,20,18,A9,24";
+            string testPrg = "18 a9 55 29 05";
             emulator.LoadProgramToMemory(testPrg);
             emulator.SetMemoryByte(0x2043, 0x04);
             emulator.SetMemoryByte(0x0010, 0xe8);
